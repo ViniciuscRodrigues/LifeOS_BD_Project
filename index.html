@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="pt-br">
+    <head>
+        <meta charset="UTF-8" />
+        <title>LifeOS - Gestor Total</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+            :root {
+                color-scheme: dark;
+            }
+            body {
+                background-color: #0f172a;
+                color: #f8fafc;
+                font-family: "Inter", system-ui, sans-serif;
+                overflow: hidden;
+            }
+            .tab-content {
+                display: none;
+            }
+            .tab-content.active {
+                display: block;
+                animation: fadeIn 0.2s ease-in;
+            }
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(5px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            ::-webkit-scrollbar {
+                width: 6px;
+            }
+            ::-webkit-scrollbar-thumb {
+                background: #334155;
+                border-radius: 4px;
+            }
+        </style>
+    </head>
+    <body class="h-screen flex">
+        <aside
+            class="w-64 bg-slate-900 border-r border-slate-800 p-6 flex flex-col"
+        >
+            <h1 class="text-2xl font-bold text-indigo-400 mb-8 tracking-wider">
+                LifeOS<span class="text-slate-500 text-sm block"
+                    >Total Control</span
+                >
+            </h1>
+            <nav class="space-y-2">
+                <button
+                    onclick="switchTab('extrato', this)"
+                    class="nav-btn w-full text-left px-4 py-3 rounded-lg bg-indigo-600 text-white font-medium transition-colors"
+                >
+                    💰 Finanças
+                </button>
+                <button
+                    onclick="switchTab('invest', this)"
+                    class="nav-btn w-full text-left px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 font-medium transition-colors"
+                >
+                    📈 Investimentos
+                </button>
+                <button
+                    onclick="switchTab('estudos', this)"
+                    class="nav-btn w-full text-left px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 font-medium transition-colors"
+                >
+                    📚 Estudos
+                </button>
+                <button
+                    onclick="switchTab('treinos', this)"
+                    class="nav-btn w-full text-left px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 font-medium transition-colors"
+                >
+                    🏋️ Treinos
+                </button>
+                <button
+                    onclick="switchTab('dieta', this)"
+                    class="nav-btn w-full text-left px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 font-medium transition-colors"
+                >
+                    🥗 Dieta
+                </button>
+                <button
+                    onclick="switchTab('habitos', this)"
+                    class="nav-btn w-full text-left px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 font-medium transition-colors"
+                >
+                    ✅ Hábitos
+                </button>
+            </nav>
+        </aside>
+
+        <main class="flex-1 p-8 overflow-y-auto bg-slate-950">
+            <section id="extrato" class="tab-content active max-w-5xl mx-auto">
+                <div class="grid grid-cols-3 gap-6 mb-8">
+                    <div
+                        class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-lg"
+                    >
+                        <p class="text-slate-400 text-sm uppercase mb-1">
+                            Saldo Atual
+                        </p>
+                        <h2 id="ui-balance" class="text-3xl font-bold">
+                            R$ 0,00
+                        </h2>
+                    </div>
+                    <div
+                        class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-lg"
+                    >
+                        <p class="text-slate-400 text-sm uppercase mb-1">
+                            Entradas
+                        </p>
+                        <h2
+                            id="ui-incomes"
+                            class="text-3xl font-bold text-emerald-400"
+                        >
+                            R$ 0,00
+                        </h2>
+                    </div>
+                    <div
+                        class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-lg"
+                    >
+                        <p class="text-slate-400 text-sm uppercase mb-1">
+                            Saídas
+                        </p>
+                        <h2
+                            id="ui-expenses"
+                            class="text-3xl font-bold text-rose-400"
+                        >
+                            R$ 0,00
+                        </h2>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-indigo-900/40 p-6 rounded-2xl border border-indigo-500/30 mb-8 shadow-lg relative overflow-hidden"
+                >
+                    <div
+                        class="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500 rounded-full blur-3xl opacity-20"
+                    ></div>
+                    <div
+                        class="flex justify-between items-start mb-3 relative z-10"
+                    >
+                        <div>
+                            <h3
+                                class="font-bold text-indigo-300 flex items-center gap-2"
+                            >
+                                <span>🧠</span> Consultor Gemini IA
+                            </h3>
+                            <p class="text-xs text-indigo-200/60 mt-1">
+                                Análise automatizada baseada em todos os módulos
+                                do PostgreSQL
+                            </p>
+                        </div>
+                        <button
+                            id="btn-ai"
+                            onclick="askAI()"
+                            class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2 rounded-lg font-semibold transition shadow-md"
+                        >
+                            Analisar Minha Rotina
+                        </button>
+                    </div>
+                    <div
+                        class="bg-slate-950/50 p-4 rounded-lg border border-indigo-500/20 relative z-10"
+                    >
+                        <p
+                            id="ai-response"
+                            class="text-slate-300 text-sm italic leading-relaxed"
+                        >
+                            Clique no botão para receber um conselho
+                            personalizado.
+                        </p>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-slate-900 p-4 rounded-2xl border border-slate-800 mb-8 flex gap-4"
+                >
+                    <select
+                        id="tx-type"
+                        class="bg-slate-950 border border-slate-700 text-white rounded-lg px-4 py-2 outline-none"
+                    >
+                        <option value="saida" class="bg-slate-900">
+                            Saída (-)
+                        </option>
+                        <option value="entrada" class="bg-slate-900">
+                            Entrada (+)
+                        </option>
+                    </select>
+                    <input
+                        type="text"
+                        id="tx-cat"
+                        placeholder="Categoria (Ex: Mercado)"
+                        class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white outline-none"
+                    />
+                    <input
+                        type="number"
+                        id="tx-val"
+                        placeholder="Valor"
+                        step="0.01"
+                        class="w-32 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white outline-none"
+                    />
+                    <button
+                        onclick="addTx()"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg font-semibold transition"
+                    >
+                        Adicionar
+                    </button>
+                </div>
+                <div
+                    class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden"
+                >
+                    <div class="p-4 border-b border-slate-800 bg-slate-900">
+                        <h3 class="font-semibold text-slate-300">
+                            Histórico de Transações
+                        </h3>
+                    </div>
+                    <ul id="tx-list" class="divide-y divide-slate-800/50"></ul>
+                </div>
+            </section>
+
+            <section id="invest" class="tab-content max-w-5xl mx-auto">
+                <div
+                    class="bg-slate-900 p-6 rounded-2xl border border-slate-800 mb-8 shadow-lg"
+                >
+                    <h3 class="font-semibold text-slate-300 mb-4">
+                        Nova Aplicação
+                    </h3>
+                    <div class="grid grid-cols-5 gap-4 items-end">
+                        <div class="col-span-1">
+                            <label class="text-xs text-slate-500 mb-1 block"
+                                >Tipo</label
+                            >
+                            <select
+                                id="inv-cat"
+                                class="w-full bg-slate-950 border border-slate-700 text-white rounded-lg px-3 py-2 outline-none"
+                                onchange="toggleInvFields()"
+                            >
+                                <option value="porquinho" class="bg-slate-900">
+                                    Porquinho (Lazer)
+                                </option>
+                                <option value="renda_fixa" class="bg-slate-900">
+                                    Renda Fixa (CDI)
+                                </option>
+                                <option value="fii" class="bg-slate-900">
+                                    FIIs (StatusInvest)
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-span-1 relative">
+                            <label class="text-xs text-slate-500 mb-1 block"
+                                >Nome / Ticker</label
+                            >
+                            <div class="flex gap-2">
+                                <input
+                                    type="text"
+                                    id="inv-name"
+                                    placeholder="Ex: CDB Inter"
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none uppercase"
+                                />
+                                <button
+                                    id="btn-search"
+                                    onclick="searchTicker()"
+                                    class="hidden bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-lg transition"
+                                >
+                                    🔍
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-span-1">
+                            <label class="text-xs text-slate-500 mb-1 block"
+                                >Investido (R$)</label
+                            ><input
+                                type="number"
+                                id="inv-invested"
+                                step="0.01"
+                                class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none"
+                            />
+                        </div>
+                        <div class="col-span-1">
+                            <label class="text-xs text-slate-500 mb-1 block"
+                                >Yield (%)</label
+                            ><input
+                                type="number"
+                                id="inv-rate"
+                                step="0.01"
+                                class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none"
+                            />
+                        </div>
+                        <button
+                            onclick="addInv()"
+                            class="col-span-1 h-[42px] bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-semibold transition"
+                        >
+                            Salvar
+                        </button>
+                    </div>
+                    <div
+                        id="rf-fields"
+                        class="hidden grid-cols-1 gap-4 mt-4 p-4 bg-slate-950/50 rounded-lg border border-slate-800"
+                    >
+                        <div>
+                            <label class="text-xs text-indigo-400 block"
+                                >% do CDI</label
+                            ><input
+                                type="number"
+                                id="inv-cdi-percent"
+                                value="100"
+                                class="w-32 bg-slate-950 border border-indigo-500 rounded-lg px-3 py-2 text-white outline-none"
+                            />
+                        </div>
+                    </div>
+                    <div
+                        id="fii-fields"
+                        class="hidden grid-cols-2 gap-4 mt-4 p-4 bg-slate-950/50 rounded-lg border border-slate-800"
+                    >
+                        <div>
+                            <label class="text-xs text-slate-500 block"
+                                >Preço Cota</label
+                            ><input
+                                type="number"
+                                id="inv-price"
+                                readonly
+                                class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-300"
+                            />
+                        </div>
+                        <div>
+                            <label class="text-xs text-indigo-400 block"
+                                >Qtd. Cotas</label
+                            ><input
+                                type="number"
+                                id="inv-quotas"
+                                oninput="calcTotalFII()"
+                                class="w-full bg-slate-950 border border-indigo-500 rounded-lg px-3 py-2 text-white outline-none"
+                            />
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden"
+                >
+                    <div id="inv-list" class="grid grid-cols-2 gap-4 p-4"></div>
+                </div>
+            </section>
+
+            <section id="estudos" class="tab-content max-w-5xl mx-auto">
+                <div
+                    class="bg-slate-900 p-4 rounded-2xl border border-slate-800 mb-8 flex gap-4"
+                >
+                    <select
+                        id="sel-disciplina"
+                        class="bg-slate-950 border border-slate-700 text-white rounded-lg px-4 py-2 outline-none"
+                    ></select>
+                    <input
+                        type="text"
+                        id="estudo-topico"
+                        placeholder="Tópico (Ex: Integrais)"
+                        class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white outline-none"
+                    />
+                    <input
+                        type="number"
+                        id="estudo-duracao"
+                        placeholder="Minutos"
+                        class="w-32 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white outline-none"
+                    />
+                    <button
+                        onclick="addEstudo()"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg font-semibold transition"
+                    >
+                        Registar
+                    </button>
+                </div>
+                <div
+                    class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden"
+                >
+                    <div class="p-4 border-b border-slate-800">
+                        <h3 class="font-semibold text-slate-300">
+                            Histórico de Estudos
+                        </h3>
+                    </div>
+                    <ul
+                        id="estudos-list"
+                        class="divide-y divide-slate-800/50"
+                    ></ul>
+                </div>
+            </section>
+
+            <section id="treinos" class="tab-content max-w-5xl mx-auto">
+                <div
+                    class="bg-slate-900 p-4 rounded-2xl border border-slate-800 mb-8 flex gap-4"
+                >
+                    <select
+                        id="sel-exercicio"
+                        class="bg-slate-950 border border-slate-700 text-white rounded-lg px-4 py-2 outline-none"
+                    ></select>
+                    <input
+                        type="number"
+                        id="treino-reps"
+                        placeholder="Repetições"
+                        class="w-32 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white outline-none"
+                    />
+                    <input
+                        type="number"
+                        id="treino-carga"
+                        placeholder="Carga (Kg)"
+                        step="0.5"
+                        class="w-32 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white outline-none"
+                    />
+                    <button
+                        onclick="addTreino()"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg font-semibold transition"
+                    >
+                        Registar
+                    </button>
+                </div>
+                <div
+                    class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden"
+                >
+                    <div class="p-4 border-b border-slate-800">
+                        <h3 class="font-semibold text-slate-300">
+                            Registo Diário de Treino
+                        </h3>
+                    </div>
+                    <ul
+                        id="treinos-list"
+                        class="divide-y divide-slate-800/50"
+                    ></ul>
+                </div>
+            </section>
+
+            <section id="dieta" class="tab-content max-w-5xl mx-auto">
+                <div
+                    class="bg-slate-900 p-4 rounded-2xl border border-slate-800 mb-8 flex gap-4"
+                >
+                    <select
+                        id="sel-alimento"
+                        class="bg-slate-950 border border-slate-700 text-white rounded-lg px-4 py-2 outline-none flex-1"
+                    ></select>
+                    <input
+                        type="number"
+                        id="dieta-porcoes"
+                        placeholder="Qtd Porções"
+                        step="0.5"
+                        class="w-40 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white outline-none"
+                    />
+                    <button
+                        onclick="addDieta()"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg font-semibold transition"
+                    >
+                        Consumir
+                    </button>
+                </div>
+                <div
+                    class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden"
+                >
+                    <div class="p-4 border-b border-slate-800">
+                        <h3 class="font-semibold text-slate-300">
+                            Consumo Alimentar
+                        </h3>
+                    </div>
+                    <ul
+                        id="dieta-list"
+                        class="divide-y divide-slate-800/50"
+                    ></ul>
+                </div>
+            </section>
+
+            <section id="habitos" class="tab-content max-w-5xl mx-auto">
+                <div
+                    class="bg-slate-900 p-4 rounded-2xl border border-slate-800 mb-8 flex gap-4"
+                >
+                    <select
+                        id="sel-habito"
+                        class="bg-slate-950 border border-slate-700 text-white rounded-lg px-4 py-2 outline-none flex-1"
+                    ></select>
+                    <select
+                        id="habito-status"
+                        class="bg-slate-950 border border-slate-700 text-white rounded-lg px-4 py-2 outline-none"
+                    >
+                        <option value="Concluido" class="bg-slate-900">
+                            Concluído
+                        </option>
+                        <option value="Falhou" class="bg-slate-900">
+                            Falhou
+                        </option>
+                        <option value="Pendente" class="bg-slate-900">
+                            Pendente
+                        </option>
+                    </select>
+                    <button
+                        onclick="addHabito()"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg font-semibold transition"
+                    >
+                        Check-in
+                    </button>
+                </div>
+                <div
+                    class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden"
+                >
+                    <div class="p-4 border-b border-slate-800">
+                        <h3 class="font-semibold text-slate-300">
+                            Registo de Hábitos
+                        </h3>
+                    </div>
+                    <ul
+                        id="habitos-list"
+                        class="divide-y divide-slate-800/50"
+                    ></ul>
+                </div>
+            </section>
+        </main>
+        <script src="src/main.js"></script>
+    </body>
+</html>

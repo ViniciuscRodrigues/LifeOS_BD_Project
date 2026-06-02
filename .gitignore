@@ -1,0 +1,17 @@
+# Arquivos de Senhas e Credenciais
+.env
+
+# Ignorar ambiente virtual
+venv/
+env/
+.venv/
+
+# Ignorar arquivos temporários do Python e caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignorar configurações locais do Zed e SO
+.zed/
+.DS_Store
