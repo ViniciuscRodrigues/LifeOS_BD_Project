@@ -13,7 +13,6 @@ load_dotenv()
 
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-# Configure a sua chave de API
 
 DB_CONFIG = {
     "host": os.getenv("DB_HOST"),
@@ -323,7 +322,7 @@ class LifeOSApp:
             print(e)
         return self.GetDashboardData()
 
-    # --- MÉTODOS ORIGINAIS (Finanças e APIs) ---
+    # --- Finanças e APIs ---
     def AddTransaction(self, tType, category, value):
         tipo_banco = "Entrada" if tType == "entrada" else "Saida"
         try:
@@ -515,7 +514,6 @@ class LifeOSApp:
 if __name__ == "__main__":
     app = LifeOSApp()
 
-    # ATENÇÃO: Mantido como instruído para limpar e carregar base todas as vezes
     app.ResetDatabase()
 
     webview.create_window(
