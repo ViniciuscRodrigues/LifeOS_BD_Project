@@ -13,9 +13,7 @@ load_dotenv()
 
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-
 # Configure a sua chave de API
-# genai.configure(api_key="Sua_Chave_de_API_Aqui")
 
 DB_CONFIG = {
     "host": os.getenv("DB_HOST"),
