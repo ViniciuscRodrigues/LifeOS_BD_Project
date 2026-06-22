@@ -3,6 +3,9 @@ const fmt = (val) =>
     val,
   );
 
+// Variável global para armazenar a instância do gráfico e evitar sobreposição
+let investChartInstance = null;
+
 window.switchTab = (tabId, btn) => {
   document
     .querySelectorAll(".tab-content")
@@ -18,16 +21,15 @@ window.switchTab = (tabId, btn) => {
 
 window.toggleInvFields = () => {
   const cat = document.getElementById("inv-cat").value;
-  document.getElementById("fii-fields").style.display =
-    cat === "fii" ? "grid" : "none";
-  document.getElementById("rf-fields").style.display =
-    cat === "renda_fixa" ? "grid" : "none";
+  const isFii = cat === "fii";
+  const isRF = cat === "renda_fixa";
+  document.getElementById("fii-fields").style.display = isFii ? "grid" : "none";
+  document.getElementById("rf-fields").style.display = isRF ? "grid" : "none";
   const btnSearch = document.getElementById("btn-search");
-  btnSearch.style.display =
-    cat === "fii" || cat === "renda_fixa" ? "block" : "none";
-  btnSearch.title = cat === "fii" ? "Buscar Cotação e DY" : "Puxar Taxa CDI";
-  document.getElementById("inv-invested").readOnly = cat === "fii";
-  if (cat === "fii")
+  btnSearch.style.display = isFii || isRF ? "block" : "none";
+  btnSearch.title = isFii ? "Buscar Cotação e DY" : "Puxar Taxa CDI";
+  document.getElementById("inv-invested").readOnly = isFii;
+  if (isFii)
     document.getElementById("inv-invested").classList.add("opacity-50");
   else document.getElementById("inv-invested").classList.remove("opacity-50");
 };
@@ -72,7 +74,7 @@ window.searchTicker = async () => {
       }
     }
   } catch (e) {
-    alert("Erro interno na comunicação.");
+    alert("Erro na comunicação com o servidor.");
   } finally {
     btn.innerText = "🔍";
   }
@@ -86,11 +88,10 @@ window.addEventListener("pywebviewready", async function () {
 window.askAI = async () => {
   const btn = document.getElementById("btn-ai");
   const responseP = document.getElementById("ai-response");
-  btn.innerText = "Pensando...";
+  btn.innerText = "Analisando...";
   btn.classList.add("animate-pulse", "bg-indigo-400");
   btn.disabled = true;
-  responseP.innerText =
-    "Consultando o PostgreSQL em todas as tabelas e enviando para o Gemini...";
+  responseP.innerText = "Consultando o PostgreSQL e o modelo de linguagem...";
 
   try {
     const data = await window.pywebview.api.GetAIInsights();
@@ -107,7 +108,6 @@ window.askAI = async () => {
   }
 };
 
-// --- MÉTODOS DE AÇÃO (CRUD) ---
 window.addTx = async () => {
   const type = document.getElementById("tx-type").value,
     cat = document.getElementById("tx-cat").value,
@@ -192,19 +192,79 @@ window.deleteHabito = async (id) => {
     renderAll(await window.pywebview.api.DeleteHabito(id));
 };
 
-// --- FUNÇÃO DE RENDERIZAÇÃO GERAL ---
+// --- FUNÇÃO DE RENDERIZAÇÃO GERAL E PLOTAGEM DO GRÁFICO ---
 function renderAll(data) {
   if (data.error) {
     console.error(data.error);
     return;
   }
 
-  // Atualiza Painel Financeiro
+  // 1. Atualizar Cards da Visão Geral (NOVO)
+  document.getElementById("sum-patrimonio").innerText = fmt(
+    data.summary.patrimonio_total,
+  );
+  document.getElementById("sum-estudo").innerText =
+    `${data.summary.horas_estudo} h`;
+  document.getElementById("sum-treino").innerText =
+    data.summary.treinos_realizados;
+  document.getElementById("sum-habito").innerText =
+    `${data.summary.taxa_habitos}%`;
+
+  // 2. Plotar Gráfico de Investimentos (NOVO)
+  const ctx = document.getElementById("investChart").getContext("2d");
+
+  if (investChartInstance) {
+    investChartInstance.destroy(); // Apaga o gráfico antigo se houver recarregamento
+  }
+
+  const chartLabels = data.summary.grafico_investimentos.map((d) => d.data);
+  const chartData = data.summary.grafico_investimentos.map(
+    (d) => d.total_acumulado,
+  );
+
+  investChartInstance = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: chartLabels,
+      datasets: [
+        {
+          label: "Acumulado R$",
+          data: chartData,
+          borderColor: "#818cf8", // Cor Indigo Tailwind
+          backgroundColor: "rgba(129, 140, 248, 0.2)",
+          borderWidth: 3,
+          fill: true,
+          tension: 0.3,
+          pointBackgroundColor: "#818cf8",
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: "rgba(51, 65, 85, 0.5)" },
+          ticks: { color: "#94a3b8" },
+        },
+        x: {
+          grid: { color: "rgba(51, 65, 85, 0.5)" },
+          ticks: { color: "#94a3b8" },
+        },
+      },
+      plugins: {
+        legend: { labels: { color: "#cbd5e1", font: { family: "Inter" } } },
+      },
+    },
+  });
+
+  // 3. Atualizar Painel Financeiro Clássico
   document.getElementById("ui-balance").innerText = fmt(data.balance);
   document.getElementById("ui-incomes").innerText = fmt(data.incomes);
   document.getElementById("ui-expenses").innerText = fmt(data.expenses);
 
-  // Preencher Caixas de Seleção (Dropdowns)
+  // 4. Preencher Caixas de Seleção (Dropdowns)
   document.getElementById("sel-disciplina").innerHTML =
     data.catalogs.disciplinas
       .map(
@@ -228,70 +288,70 @@ function renderAll(data) {
     )
     .join("");
 
-  // Renderizar Listas do Histórico
+  // 5. Renderizar Listas
   document.getElementById("tx-list").innerHTML = data.transactions
     .map(
       (tx) => `
-        <li class="p-4 flex justify-between items-center hover:bg-slate-800/50 transition group">
-            <span class="font-medium text-slate-200">${tx.categoria}</span>
-            <div class="flex items-center gap-4">
-                <span class="font-bold ${tx.tipo === "Entrada" ? "text-emerald-400" : "text-rose-400"}">${tx.tipo === "Entrada" ? "+" : "-"} ${fmt(tx.valor)}</span>
-                <button onclick="deleteTx(${tx.id})" class="text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">🗑️</button>
-            </div>
-        </li>`,
+    <li class="p-4 flex justify-between items-center hover:bg-slate-800/50 transition group">
+        <span class="font-medium text-slate-200">${tx.categoria}</span>
+        <div class="flex items-center gap-4">
+            <span class="font-bold ${tx.tipo === "Entrada" ? "text-emerald-400" : "text-rose-400"}">${tx.tipo === "Entrada" ? "+" : "-"} ${fmt(tx.valor)}</span>
+            <button onclick="deleteTx(${tx.id})" class="text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">🗑️</button>
+        </div>
+    </li>`,
     )
     .join("");
 
   document.getElementById("inv-list").innerHTML = data.investments
     .map(
       (inv) => `
-        <div class="bg-slate-950 p-5 rounded-xl border border-slate-800 flex flex-col gap-2 group">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                <span class="text-xs font-bold text-indigo-400 uppercase">${inv.categoria}</span>
-                <div class="flex items-center gap-3"><span class="font-bold text-slate-200">${inv.ticker_nome}</span><button onclick="deleteInv(${inv.id})" class="text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">🗑️</button></div>
-            </div>
-            <div class="flex justify-between text-sm mt-2"><span class="text-slate-400">Investido:</span><span class="font-bold text-white">${fmt(inv.valor_investido)}</span></div>
-        </div>`,
+    <div class="bg-slate-950 p-5 rounded-xl border border-slate-800 flex flex-col gap-2 group">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+            <span class="text-xs font-bold text-indigo-400 uppercase">${inv.categoria}</span>
+            <div class="flex items-center gap-3"><span class="font-bold text-slate-200">${inv.ticker_nome}</span><button onclick="deleteInv(${inv.id})" class="text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">🗑️</button></div>
+        </div>
+        <div class="flex justify-between text-sm mt-2"><span class="text-slate-400">Investido:</span><span class="font-bold text-white">${fmt(inv.valor_investido)}</span></div>
+    </div>`,
     )
     .join("");
 
   document.getElementById("estudos-list").innerHTML = data.history.estudos
     .map(
       (e) => `
-        <li class="p-4 flex justify-between items-center hover:bg-slate-800/50 group">
-            <div><p class="font-medium text-slate-200">${e.disciplina}</p><p class="text-xs text-slate-500">${e.topico_estudado}</p></div>
-            <div class="flex items-center gap-4"><span class="text-indigo-400 font-bold">${e.duracao_minutos} min</span><button onclick="deleteEstudo(${e.id})" class="text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">🗑️</button></div>
-        </li>`,
+    <li class="p-4 flex justify-between items-center hover:bg-slate-800/50 group">
+        <div><p class="font-medium text-slate-200">${e.disciplina}</p><p class="text-xs text-slate-500">${e.topico_estudado}</p></div>
+        <div class="flex items-center gap-4"><span class="text-indigo-400 font-bold">${e.duracao_minutos} min</span><button onclick="deleteEstudo(${e.id})" class="text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">🗑️</button></div>
+    </li>`,
     )
     .join("");
 
   document.getElementById("treinos-list").innerHTML = data.history.treinos
     .map(
       (t) => `
-        <li class="p-4 flex justify-between items-center hover:bg-slate-800/50 group">
-            <span class="font-medium text-slate-200">${t.exercicio}</span>
-            <div class="flex items-center gap-4"><span class="text-indigo-400 font-bold">${t.repeticoes}x — ${t.carga_kg} Kg</span><button onclick="deleteTreino(${t.id})" class="text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">🗑️</button></div>
-        </li>`,
+    <li class="p-4 flex justify-between items-center hover:bg-slate-800/50 group">
+        <span class="font-medium text-slate-200">${t.exercicio}</span>
+        <div class="flex items-center gap-4"><span class="text-indigo-400 font-bold">${t.repeticoes}x — ${t.carga_kg} Kg</span><button onclick="deleteTreino(${t.id})" class="text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">🗑️</button></div>
+    </li>`,
     )
     .join("");
 
   document.getElementById("dieta-list").innerHTML = data.history.dieta
     .map(
       (d) => `
-        <li class="p-4 flex justify-between items-center hover:bg-slate-800/50 group">
-            <div><p class="font-medium text-slate-200">${d.alimento}</p><p class="text-xs text-slate-500">${d.quantidade_porcoes} porções consumidas</p></div>
-            <div class="flex items-center gap-4"><div class="text-right"><p class="text-emerald-400 font-bold text-sm">${d.calorias_totais} kcal</p><p class="text-blue-400 text-xs">${d.prot_totais}g Prot</p></div><button onclick="deleteDieta(${d.id})" class="text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">🗑️</button></div>
-        </li>`,
+    <li class="p-4 flex justify-between items-center hover:bg-slate-800/50 group">
+        <div><p class="font-medium text-slate-200">${d.alimento}</p><p class="text-xs text-slate-500">${d.quantidade_porcoes} porções consumidas</p></div>
+        <div class="flex items-center gap-4"><div class="text-right"><p class="text-emerald-400 font-bold text-sm">${d.calorias_totais} kcal</p><p class="text-blue-400 text-xs">${d.prot_totais}g Prot</p></div><button onclick="deleteDieta(${d.id})" class="text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">🗑️</button></div>
+    </li>`,
     )
     .join("");
 
   document.getElementById("habitos-list").innerHTML = data.history.habitos
     .map(
       (h) => `
-        <li class="p-4 flex justify-between items-center hover:bg-slate-800/50 group">
-            <div><p class="font-medium text-slate-200">${h.habito}</p><p class="text-xs text-slate-500">Tipo: ${h.tipo}</p></div>
-            <div class="flex items-center gap-4"><span class="px-2 py-1 text-xs rounded-md font-bold ${h.status === "Concluido" ? "bg-emerald-900/50 text-emerald-400" : h.status === "Falhou" ? "bg-rose-900/50 text-rose-400" : "bg-amber-900/50 text-amber-400"}">${h.status}</span><button onclick="deleteHabito(${h.id})" class="text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">🗑️</button></div>
-        </li>`,
+    <li class="p-4 flex justify-between items-center hover:bg-slate-800/50 group">
+        <div><p class="font-medium text-slate-200">${h.habito}</p><p class="text-xs text-slate-500">Tipo: ${h.tipo}</p></div>
+        <div class="flex items-center gap-4"><span class="px-2 py-1 text-xs rounded-md font-bold ${h.status === "Concluido" ? "bg-emerald-900/50 text-emerald-400" : h.status === "Falhou" ? "bg-rose-900/50 text-rose-400" : "bg-amber-900/50 text-amber-400"}">${h.status}</span><button onclick="deleteHabito(${h.id})" class="text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">🗑️</button></div>
+    </li>`,
     )
     .join("");
 }

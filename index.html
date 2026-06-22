@@ -4,6 +4,7 @@
         <meta charset="UTF-8" />
         <title>LifeOS - Gestor Total</title>
         <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
             :root {
                 color-scheme: dark;
@@ -51,8 +52,14 @@
             </h1>
             <nav class="space-y-2">
                 <button
-                    onclick="switchTab('extrato', this)"
+                    onclick="switchTab('geral', this)"
                     class="nav-btn w-full text-left px-4 py-3 rounded-lg bg-indigo-600 text-white font-medium transition-colors"
+                >
+                    📊 Visão Geral
+                </button>
+                <button
+                    onclick="switchTab('extrato', this)"
+                    class="nav-btn w-full text-left px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 font-medium transition-colors"
                 >
                     💰 Finanças
                 </button>
@@ -90,13 +97,122 @@
         </aside>
 
         <main class="flex-1 p-8 overflow-y-auto bg-slate-950">
-            <section id="extrato" class="tab-content active max-w-5xl mx-auto">
+            <section id="geral" class="tab-content active max-w-5xl mx-auto">
+                <div class="grid grid-cols-4 gap-4 mb-8">
+                    <div
+                        class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-lg"
+                    >
+                        <p class="text-slate-400 text-xs uppercase mb-1">
+                            Patrimônio Total
+                        </p>
+                        <h2
+                            id="sum-patrimonio"
+                            class="text-2xl font-bold text-indigo-400"
+                        >
+                            R$ 0,00
+                        </h2>
+                    </div>
+                    <div
+                        class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-lg"
+                    >
+                        <p class="text-slate-400 text-xs uppercase mb-1">
+                            Horas Estudadas
+                        </p>
+                        <h2
+                            id="sum-estudo"
+                            class="text-2xl font-bold text-blue-400"
+                        >
+                            0 h
+                        </h2>
+                    </div>
+                    <div
+                        class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-lg"
+                    >
+                        <p class="text-slate-400 text-xs uppercase mb-1">
+                            Treinos Realizados
+                        </p>
+                        <h2
+                            id="sum-treino"
+                            class="text-2xl font-bold text-orange-400"
+                        >
+                            0
+                        </h2>
+                    </div>
+                    <div
+                        class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-lg"
+                    >
+                        <p class="text-slate-400 text-xs uppercase mb-1">
+                            Sucesso Hábitos
+                        </p>
+                        <h2
+                            id="sum-habito"
+                            class="text-2xl font-bold text-emerald-400"
+                        >
+                            0%
+                        </h2>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-slate-900 p-6 rounded-2xl border border-slate-800 mb-8 shadow-lg"
+                >
+                    <h3 class="font-semibold text-slate-300 mb-4">
+                        Evolução de Aportes (Investimentos)
+                    </h3>
+                    <div class="w-full h-64">
+                        <canvas id="investChart"></canvas>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-indigo-900/40 p-6 rounded-2xl border border-indigo-500/30 mb-8 shadow-lg relative overflow-hidden"
+                >
+                    <div
+                        class="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500 rounded-full blur-3xl opacity-20"
+                    ></div>
+                    <div
+                        class="flex justify-between items-start mb-3 relative z-10"
+                    >
+                        <div>
+                            <h3
+                                class="font-bold text-indigo-300 flex items-center gap-2"
+                            >
+                                <span>🧠</span> Consultor Gemini IA
+                            </h3>
+                            <p class="text-xs text-indigo-200/60 mt-1">
+                                Análise holística de todos os módulos do
+                                PostgreSQL
+                            </p>
+                        </div>
+                        <button
+                            id="btn-ai"
+                            onclick="askAI()"
+                            class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2 rounded-lg font-semibold transition shadow-md"
+                        >
+                            Analisar Minha Rotina
+                        </button>
+                    </div>
+                    <div
+                        class="bg-slate-950/50 p-4 rounded-lg border border-indigo-500/20 relative z-10"
+                    >
+                        <p
+                            id="ai-response"
+                            class="text-slate-300 text-sm italic leading-relaxed"
+                        >
+                            Clique no botão para receber um conselho
+                            personalizado da sua vida.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="extrato" class="tab-content max-w-5xl mx-auto">
                 <div class="grid grid-cols-3 gap-6 mb-8">
                     <div
                         class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-lg"
                     >
                         <p class="text-slate-400 text-sm uppercase mb-1">
-                            Saldo Atual
+                            Saldo Conta Corrente
                         </p>
                         <h2 id="ui-balance" class="text-3xl font-bold">
                             R$ 0,00
@@ -127,47 +243,6 @@
                         >
                             R$ 0,00
                         </h2>
-                    </div>
-                </div>
-
-                <div
-                    class="bg-indigo-900/40 p-6 rounded-2xl border border-indigo-500/30 mb-8 shadow-lg relative overflow-hidden"
-                >
-                    <div
-                        class="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500 rounded-full blur-3xl opacity-20"
-                    ></div>
-                    <div
-                        class="flex justify-between items-start mb-3 relative z-10"
-                    >
-                        <div>
-                            <h3
-                                class="font-bold text-indigo-300 flex items-center gap-2"
-                            >
-                                <span>🧠</span> Consultor Gemini IA
-                            </h3>
-                            <p class="text-xs text-indigo-200/60 mt-1">
-                                Análise automatizada baseada em todos os módulos
-                                do PostgreSQL
-                            </p>
-                        </div>
-                        <button
-                            id="btn-ai"
-                            onclick="askAI()"
-                            class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2 rounded-lg font-semibold transition shadow-md"
-                        >
-                            Analisar Minha Rotina
-                        </button>
-                    </div>
-                    <div
-                        class="bg-slate-950/50 p-4 rounded-lg border border-indigo-500/20 relative z-10"
-                    >
-                        <p
-                            id="ai-response"
-                            class="text-slate-300 text-sm italic leading-relaxed"
-                        >
-                            Clique no botão para receber um conselho
-                            personalizado.
-                        </p>
                     </div>
                 </div>
 
