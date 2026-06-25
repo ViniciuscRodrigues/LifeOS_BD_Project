@@ -4,6 +4,10 @@
         <meta charset="UTF-8" />
         <title>LifeOS - Gestor Total</title>
         <script src="https://cdn.tailwindcss.com"></script>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        />
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
             :root {
@@ -55,55 +59,56 @@
                     onclick="switchTab('geral', this)"
                     class="nav-btn w-full text-left px-4 py-3 rounded-lg bg-indigo-600 text-white font-medium transition-colors"
                 >
-                    📊 Visão Geral
+                    <i class="fa-solid fa-chart-pie mr-2"></i> Visão Geral
                 </button>
                 <button
                     onclick="switchTab('extrato', this)"
                     class="nav-btn w-full text-left px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 font-medium transition-colors"
                 >
-                    💰 Finanças
+                    <i class="fa-solid fa-wallet mr-2"></i> Finanças
                 </button>
                 <button
                     onclick="switchTab('invest', this)"
                     class="nav-btn w-full text-left px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 font-medium transition-colors"
                 >
-                    📈 Investimentos
+                    <i class="fa-solid fa-chart-line mr-2"></i> Investimentos
                 </button>
                 <button
                     onclick="switchTab('estudos', this)"
                     class="nav-btn w-full text-left px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 font-medium transition-colors"
                 >
-                    📚 Estudos
+                    <i class="fa-solid fa-book mr-2"></i> Estudos
                 </button>
                 <button
                     onclick="switchTab('treinos', this)"
                     class="nav-btn w-full text-left px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 font-medium transition-colors"
                 >
-                    🏋️ Treinos
+                    <i class="fa-solid fa-dumbbell mr-2"></i> Treinos
                 </button>
                 <button
                     onclick="switchTab('dieta', this)"
                     class="nav-btn w-full text-left px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 font-medium transition-colors"
                 >
-                    🥗 Dieta
+                    <i class="fa-solid fa-apple-whole mr-2"></i> Dieta
                 </button>
                 <button
                     onclick="switchTab('habitos', this)"
                     class="nav-btn w-full text-left px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 font-medium transition-colors"
                 >
-                    ✅ Hábitos
+                    <i class="fa-solid fa-circle-check mr-2"></i> Hábitos
                 </button>
             </nav>
         </aside>
 
         <main class="flex-1 p-8 overflow-y-auto bg-slate-950">
+            <!-- ABA GERAL -->
             <section id="geral" class="tab-content active max-w-5xl mx-auto">
                 <div class="grid grid-cols-4 gap-4 mb-8">
                     <div
                         class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-lg"
                     >
                         <p class="text-slate-400 text-xs uppercase mb-1">
-                            Patrimônio Total
+                            Patrimônio
                         </p>
                         <h2
                             id="sum-patrimonio"
@@ -129,7 +134,7 @@
                         class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-lg"
                     >
                         <p class="text-slate-400 text-xs uppercase mb-1">
-                            Treinos Realizados
+                            Treinos
                         </p>
                         <h2
                             id="sum-treino"
@@ -142,34 +147,29 @@
                         class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-lg"
                     >
                         <p class="text-slate-400 text-xs uppercase mb-1">
-                            Sucesso Hábitos
+                            Hábitos Ativos
                         </p>
                         <h2
                             id="sum-habito"
                             class="text-2xl font-bold text-emerald-400"
                         >
-                            0%
+                            0
                         </h2>
                     </div>
                 </div>
-
                 <div
                     class="bg-slate-900 p-6 rounded-2xl border border-slate-800 mb-8 shadow-lg"
                 >
                     <h3 class="font-semibold text-slate-300 mb-4">
-                        Evolução de Aportes (Investimentos)
+                        Evolução de Aportes
                     </h3>
                     <div class="w-full h-64">
                         <canvas id="investChart"></canvas>
                     </div>
                 </div>
-
                 <div
                     class="bg-indigo-900/40 p-6 rounded-2xl border border-indigo-500/30 mb-8 shadow-lg relative overflow-hidden"
                 >
-                    <div
-                        class="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500 rounded-full blur-3xl opacity-20"
-                    ></div>
                     <div
                         class="flex justify-between items-start mb-3 relative z-10"
                     >
@@ -177,19 +177,22 @@
                             <h3
                                 class="font-bold text-indigo-300 flex items-center gap-2"
                             >
-                                <span>🧠</span> Consultor Gemini IA
+                                <i
+                                    class="fa-solid fa-brain text-indigo-400"
+                                ></i>
+                                Consultor Gemini IA
                             </h3>
                             <p class="text-xs text-indigo-200/60 mt-1">
-                                Análise holística de todos os módulos do
-                                PostgreSQL
+                                Análise de métricas e sugestões práticas para
+                                sua rotina.
                             </p>
                         </div>
                         <button
                             id="btn-ai"
                             onclick="askAI()"
-                            class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2 rounded-lg font-semibold transition shadow-md"
+                            class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2 rounded-lg font-semibold transition"
                         >
-                            Analisar Minha Rotina
+                            Gerar Insight da Rotina
                         </button>
                     </div>
                     <div
@@ -199,13 +202,14 @@
                             id="ai-response"
                             class="text-slate-300 text-sm italic leading-relaxed"
                         >
-                            Clique no botão para receber um conselho
-                            personalizado da sua vida.
+                            Clique no botão acima para descobrir onde você pode
+                            melhorar hoje.
                         </p>
                     </div>
                 </div>
             </section>
 
+            <!-- FINANÇAS E INVESTIMENTOS -->
             <section id="extrato" class="tab-content max-w-5xl mx-auto">
                 <div class="grid grid-cols-3 gap-6 mb-8">
                     <div
@@ -245,7 +249,6 @@
                         </h2>
                     </div>
                 </div>
-
                 <div
                     class="bg-slate-900 p-4 rounded-2xl border border-slate-800 mb-8 flex gap-4"
                 >
@@ -253,12 +256,8 @@
                         id="tx-type"
                         class="bg-slate-950 border border-slate-700 text-white rounded-lg px-4 py-2 outline-none"
                     >
-                        <option value="saida" class="bg-slate-900">
-                            Saída (-)
-                        </option>
-                        <option value="entrada" class="bg-slate-900">
-                            Entrada (+)
-                        </option>
+                        <option value="saida">Saída (-)</option>
+                        <option value="entrada">Entrada (+)</option>
                     </select>
                     <input
                         type="text"
@@ -271,6 +270,7 @@
                         id="tx-val"
                         placeholder="Valor"
                         step="0.01"
+                        min="0"
                         class="w-32 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white outline-none"
                     />
                     <button
@@ -303,21 +303,18 @@
                         <div class="col-span-1">
                             <label class="text-xs text-slate-500 mb-1 block"
                                 >Tipo</label
-                            >
-                            <select
+                            ><select
                                 id="inv-cat"
                                 class="w-full bg-slate-950 border border-slate-700 text-white rounded-lg px-3 py-2 outline-none"
                                 onchange="toggleInvFields()"
                             >
-                                <option value="porquinho" class="bg-slate-900">
+                                <option value="porquinho">
                                     Porquinho (Lazer)
                                 </option>
-                                <option value="renda_fixa" class="bg-slate-900">
+                                <option value="renda_fixa">
                                     Renda Fixa (CDI)
                                 </option>
-                                <option value="fii" class="bg-slate-900">
-                                    FIIs (StatusInvest)
-                                </option>
+                                <option value="fii">FIIs (StatusInvest)</option>
                             </select>
                         </div>
                         <div class="col-span-1 relative">
@@ -328,15 +325,14 @@
                                 <input
                                     type="text"
                                     id="inv-name"
-                                    placeholder="Ex: CDB Inter"
-                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none uppercase"
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white uppercase"
                                 />
                                 <button
                                     id="btn-search"
                                     onclick="searchTicker()"
-                                    class="hidden bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-lg transition"
+                                    class="hidden bg-indigo-600 text-white px-3 py-2 rounded-lg"
                                 >
-                                    🔍
+                                    <i class="fa-solid fa-magnifying-glass"></i>
                                 </button>
                             </div>
                         </div>
@@ -347,7 +343,8 @@
                                 type="number"
                                 id="inv-invested"
                                 step="0.01"
-                                class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none"
+                                min="0"
+                                class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white"
                             />
                         </div>
                         <div class="col-span-1">
@@ -357,12 +354,13 @@
                                 type="number"
                                 id="inv-rate"
                                 step="0.01"
-                                class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none"
+                                min="0"
+                                class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white"
                             />
                         </div>
                         <button
                             onclick="addInv()"
-                            class="col-span-1 h-[42px] bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-semibold transition"
+                            class="col-span-1 h-[42px] bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-semibold"
                         >
                             Salvar
                         </button>
@@ -378,6 +376,7 @@
                                 type="number"
                                 id="inv-cdi-percent"
                                 value="100"
+                                min="0"
                                 class="w-32 bg-slate-950 border border-indigo-500 rounded-lg px-3 py-2 text-white outline-none"
                             />
                         </div>
@@ -403,6 +402,7 @@
                                 type="number"
                                 id="inv-quotas"
                                 oninput="calcTotalFII()"
+                                min="0"
                                 class="w-full bg-slate-950 border border-indigo-500 rounded-lg px-3 py-2 text-white outline-none"
                             />
                         </div>
@@ -415,32 +415,49 @@
                 </div>
             </section>
 
+            <!-- ABA: ESTUDOS -->
             <section id="estudos" class="tab-content max-w-5xl mx-auto">
                 <div
-                    class="bg-slate-900 p-4 rounded-2xl border border-slate-800 mb-8 flex gap-4"
+                    class="bg-slate-900 p-5 rounded-2xl border border-slate-800 mb-8 flex flex-col gap-4"
                 >
-                    <select
-                        id="sel-disciplina"
-                        class="bg-slate-950 border border-slate-700 text-white rounded-lg px-4 py-2 outline-none"
-                    ></select>
-                    <input
-                        type="text"
-                        id="estudo-topico"
-                        placeholder="Tópico (Ex: Integrais)"
-                        class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white outline-none"
-                    />
-                    <input
-                        type="number"
-                        id="estudo-duracao"
-                        placeholder="Minutos"
-                        class="w-32 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white outline-none"
-                    />
-                    <button
-                        onclick="addEstudo()"
-                        class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg font-semibold transition"
-                    >
-                        Registar
-                    </button>
+                    <div class="grid grid-cols-4 gap-4">
+                        <input
+                            type="text"
+                            id="estudo-materia"
+                            placeholder="Matéria (Ex: Banco de Dados)"
+                            class="bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white outline-none"
+                        />
+                        <input
+                            type="text"
+                            id="estudo-topico"
+                            placeholder="Tópico (Ex: Modelagem)"
+                            class="bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white outline-none"
+                        />
+                        <input
+                            type="text"
+                            id="estudo-descricao"
+                            placeholder="Descrição/Resumo do tópico"
+                            class="col-span-2 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white outline-none"
+                        />
+                    </div>
+                    <div class="flex gap-4 justify-end items-center">
+                        <label class="text-slate-400 text-sm"
+                            >Tempo Estudado:</label
+                        >
+                        <input
+                            type="number"
+                            id="estudo-duracao"
+                            placeholder="Minutos"
+                            min="0"
+                            class="w-32 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white outline-none"
+                        />
+                        <button
+                            onclick="addEstudoLivre()"
+                            class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg font-semibold transition"
+                        >
+                            Registar
+                        </button>
+                    </div>
                 </div>
                 <div
                     class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden"
@@ -457,33 +474,74 @@
                 </div>
             </section>
 
+            <!-- ABA: TREINOS -->
             <section id="treinos" class="tab-content max-w-5xl mx-auto">
                 <div
-                    class="bg-slate-900 p-4 rounded-2xl border border-slate-800 mb-8 flex gap-4"
+                    class="bg-slate-900 p-5 rounded-2xl border border-slate-800 mb-8"
                 >
-                    <select
-                        id="sel-exercicio"
-                        class="bg-slate-950 border border-slate-700 text-white rounded-lg px-4 py-2 outline-none"
-                    ></select>
-                    <input
-                        type="number"
-                        id="treino-reps"
-                        placeholder="Repetições"
-                        class="w-32 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white outline-none"
-                    />
-                    <input
-                        type="number"
-                        id="treino-carga"
-                        placeholder="Carga (Kg)"
-                        step="0.5"
-                        class="w-32 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white outline-none"
-                    />
-                    <button
-                        onclick="addTreino()"
-                        class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg font-semibold transition"
+                    <div
+                        class="flex gap-4 mb-4 pb-4 border-b border-slate-800/50"
                     >
-                        Registar
-                    </button>
+                        <div class="flex items-center gap-2">
+                            <label class="text-xs text-slate-400 uppercase"
+                                >Meu Peso (Kg):</label
+                            >
+                            <input
+                                type="number"
+                                id="treino-peso"
+                                min="0"
+                                onchange="saveMetrics()"
+                                class="w-24 bg-slate-950 border border-slate-700 rounded-md px-2 py-1 text-white text-sm"
+                            />
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-xs text-slate-400 uppercase"
+                                >Minha Altura (cm):</label
+                            >
+                            <input
+                                type="number"
+                                id="treino-altura"
+                                min="0"
+                                onchange="saveMetrics()"
+                                class="w-24 bg-slate-950 border border-slate-700 rounded-md px-2 py-1 text-white text-sm"
+                            />
+                        </div>
+                        <span class="text-xs text-slate-600 my-auto ml-auto"
+                            >Estes dados ajudam a IA a calcular o gasto
+                            calórico.</span
+                        >
+                    </div>
+
+                    <div class="flex gap-4">
+                        <input
+                            type="text"
+                            id="treino-exercicio"
+                            placeholder="Exercício (Ex: Supino Reto)"
+                            class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white outline-none"
+                        />
+                        <input
+                            type="number"
+                            id="treino-reps"
+                            placeholder="Repetições"
+                            min="0"
+                            class="w-32 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white outline-none"
+                        />
+                        <input
+                            type="number"
+                            id="treino-carga"
+                            placeholder="Carga (Kg)"
+                            step="0.5"
+                            min="0"
+                            class="w-32 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white outline-none"
+                        />
+                        <button
+                            id="btn-add-treino"
+                            onclick="addTreinoIA()"
+                            class="bg-orange-600 hover:bg-orange-500 text-white px-6 py-2 rounded-lg font-semibold transition shadow-md"
+                        >
+                            Adicionar Exercício
+                        </button>
+                    </div>
                 </div>
                 <div
                     class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden"
@@ -500,26 +558,30 @@
                 </div>
             </section>
 
+            <!-- ABA: DIETA -->
             <section id="dieta" class="tab-content max-w-5xl mx-auto">
                 <div
-                    class="bg-slate-900 p-4 rounded-2xl border border-slate-800 mb-8 flex gap-4"
+                    class="bg-indigo-900/30 p-4 rounded-2xl border border-indigo-500/30 mb-8 flex gap-4 relative overflow-hidden shadow-lg"
                 >
-                    <select
-                        id="sel-alimento"
-                        class="bg-slate-950 border border-slate-700 text-white rounded-lg px-4 py-2 outline-none flex-1"
-                    ></select>
+                    <input
+                        type="text"
+                        id="dieta-alimento"
+                        placeholder="Qual alimento? (Ex: Peito de Frango Desfiado)"
+                        class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white outline-none relative z-10"
+                    />
                     <input
                         type="number"
-                        id="dieta-porcoes"
-                        placeholder="Qtd Porções"
-                        step="0.5"
-                        class="w-40 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white outline-none"
+                        id="dieta-gramas"
+                        placeholder="Gramas (Ex: 150)"
+                        min="0"
+                        class="w-40 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white outline-none relative z-10"
                     />
                     <button
-                        onclick="addDieta()"
-                        class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg font-semibold transition"
+                        id="btn-add-dieta"
+                        onclick="addDietaIA()"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg font-semibold transition relative z-10 shadow-md"
                     >
-                        Consumir
+                        Adicionar Alimento
                     </button>
                 </div>
                 <div
@@ -527,7 +589,7 @@
                 >
                     <div class="p-4 border-b border-slate-800">
                         <h3 class="font-semibold text-slate-300">
-                            Consumo Alimentar
+                            Consumo Alimentar Diário
                         </h3>
                     </div>
                     <ul
@@ -537,42 +599,36 @@
                 </div>
             </section>
 
+            <!-- ABA: HÁBITOS -->
             <section id="habitos" class="tab-content max-w-5xl mx-auto">
                 <div
                     class="bg-slate-900 p-4 rounded-2xl border border-slate-800 mb-8 flex gap-4"
                 >
-                    <select
-                        id="sel-habito"
-                        class="bg-slate-950 border border-slate-700 text-white rounded-lg px-4 py-2 outline-none flex-1"
-                    ></select>
-                    <select
-                        id="habito-status"
-                        class="bg-slate-950 border border-slate-700 text-white rounded-lg px-4 py-2 outline-none"
-                    >
-                        <option value="Concluido" class="bg-slate-900">
-                            Concluído
-                        </option>
-                        <option value="Falhou" class="bg-slate-900">
-                            Falhou
-                        </option>
-                        <option value="Pendente" class="bg-slate-900">
-                            Pendente
-                        </option>
-                    </select>
+                    <input
+                        type="text"
+                        id="habito-nome"
+                        placeholder="O que você quer começar a fazer? (Ex: Ler 10 páginas)"
+                        class="flex-1 bg-slate-950 border border-slate-700 text-white rounded-lg px-4 py-2 outline-none"
+                    />
                     <button
-                        onclick="addHabito()"
+                        onclick="createHabito()"
                         class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg font-semibold transition"
                     >
-                        Check-in
+                        Criar Hábito
                     </button>
                 </div>
                 <div
-                    class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden"
+                    class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-lg"
                 >
-                    <div class="p-4 border-b border-slate-800">
+                    <div
+                        class="p-4 border-b border-slate-800 flex justify-between items-center"
+                    >
                         <h3 class="font-semibold text-slate-300">
-                            Registo de Hábitos
+                            Checklist Diário
                         </h3>
+                        <span class="text-xs text-slate-500"
+                            >Reseta todo dia à meia-noite</span
+                        >
                     </div>
                     <ul
                         id="habitos-list"
