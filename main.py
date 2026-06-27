@@ -1,6 +1,8 @@
 import json
 import os
+import random
 import re
+from datetime import date, timedelta
 
 import google.generativeai as genai
 import psycopg2
@@ -40,6 +42,7 @@ class LifeOSApp:
     def get_connection(self):
         return psycopg2.connect(**DB_CONFIG)
 
+    # ================= GERENCIAMENTO DE BANCO DE DADOS =================
     def ResetDatabase(self):
         try:
             conn = self.get_connection()
@@ -54,6 +57,12 @@ class LifeOSApp:
             )
             cur.execute(
                 "ALTER TABLE sessao_estudo ADD COLUMN IF NOT EXISTS descricao_topico TEXT;"
+            )
+            cur.execute(
+                "ALTER TABLE sessao_estudo ADD COLUMN IF NOT EXISTS data_sessao DATE DEFAULT CURRENT_DATE;"
+            )
+            cur.execute(
+                "ALTER TABLE investimento ADD COLUMN IF NOT EXISTS data_aporte DATE DEFAULT CURRENT_DATE;"
             )
 
             cur.execute(
@@ -71,6 +80,100 @@ class LifeOSApp:
             print(f"Erro no Reset: {e}")
             return {"success": False, "error": str(e)}
 
+    # ================= MOCK DATA =================
+    def PopulateMockData(self):
+        try:
+            self.ResetDatabase()
+
+            conn = self.get_connection()
+            cur = conn.cursor()
+            hoje = date.today()
+
+            cur.execute(
+                "INSERT INTO disciplina_projeto (usuario_id, nome, categoria, semestre_ativo) VALUES (1, 'Banco de Dados I', 'Estudos', 'Atual') RETURNING id;"
+            )
+            db_id = cur.fetchone()[0]
+
+            cur.execute(
+                "INSERT INTO disciplina_projeto (usuario_id, nome, categoria, semestre_ativo) VALUES (1, 'Cálculo (Campo Escalar)', 'Estudos', 'Atual') RETURNING id;"
+            )
+            calc_id = cur.fetchone()[0]
+
+            cur.execute(
+                "INSERT INTO exercicio_fisico (nome, grupo_muscular) VALUES ('Supino Reto', 'Peito') RETURNING id;"
+            )
+            supino_id = cur.fetchone()[0]
+
+            cur.execute(
+                "INSERT INTO exercicio_fisico (nome, grupo_muscular) VALUES ('Agachamento Livre', 'Pernas') RETURNING id;"
+            )
+            agachamento_id = cur.fetchone()[0]
+
+            for i in range(30, -1, -1):
+                data_atual = hoje - timedelta(days=i)
+
+                if random.random() > 0.4:
+                    gasto = round(random.uniform(12.50, 85.00), 2)
+                    cur.execute(
+                        "INSERT INTO transacao_financeira (conta_id, tipo, categoria, valor, data_transacao) VALUES (1, 'Saida', 'Alimentação/Lanche', %s, %s)",
+                        (gasto, data_atual),
+                    )
+
+                if i == 30 or i == 15:
+                    cur.execute(
+                        "INSERT INTO transacao_financeira (conta_id, tipo, categoria, valor, data_transacao) VALUES (1, 'Entrada', 'Bolsa UFSC', 700.00, %s)",
+                        (data_atual,),
+                    )
+
+                if random.random() > 0.2:
+                    disc = random.choice([db_id, calc_id])
+                    tempo = random.choice([30, 45, 60, 90, 120])
+                    topico = random.choice(
+                        [
+                            "Resolução de Listas",
+                            "Leitura de PDF",
+                            "Revisão Geral",
+                            "Modelagem Lógica",
+                        ]
+                    )
+                    cur.execute(
+                        "INSERT INTO sessao_estudo (disciplina_id, duracao_minutos, topico_estudado, data_sessao) VALUES (%s, %s, %s, %s)",
+                        (disc, tempo, topico, data_atual),
+                    )
+
+                if i % 7 == 0:  # Aporte a cada 7 dias
+                    aporte = round(random.uniform(150.0, 600.0), 2)
+                    cur.execute(
+                        "INSERT INTO investimento (usuario_id, categoria, ticker_nome, valor_investido, taxa_yield, cotas, data_aporte) VALUES (1, 'fii', 'MXRF11', %s, 1.05, 50, %s)",
+                        (aporte, data_atual),
+                    )
+
+                if i % 2 == 0:
+                    cur.execute(
+                        "INSERT INTO registro_treino (usuario_id, data_treino, duracao_minutos) VALUES (1, %s, 60) RETURNING id;",
+                        (data_atual,),
+                    )
+                    treino_id = cur.fetchone()[0]
+
+                    for _ in range(random.randint(3, 4)):
+                        ex = random.choice([supino_id, agachamento_id])
+                        reps = random.randint(8, 12)
+                        carga = round(random.uniform(20.0, 60.0), 1)
+                        calorias = round(random.uniform(15.0, 25.0), 2)
+                        cur.execute(
+                            "INSERT INTO serie_treino (registro_treino_id, exercicio_id, repeticoes, carga_kg, calorias_gastas) VALUES (%s, %s, %s, %s, %s)",
+                            (treino_id, ex, reps, carga, calorias),
+                        )
+
+            conn.commit()
+            cur.close()
+            conn.close()
+            return {"success": True}
+        except Exception as e:
+            print(f"Erro no Seeding: {e}")
+            return {"success": False, "error": str(e)}
+
+    # ================= PARSER DA IA =================
     def _parse_gemini_json(self, prompt):
         try:
             model = genai.GenerativeModel("gemini-2.5-flash")
@@ -83,6 +186,7 @@ class LifeOSApp:
             print(f"Erro no parse da IA: {e}")
             return None
 
+    # ================= DASHBOARD & DASHBOARD DATA =================
     def GetDashboardData(self):
         try:
             conn = self.get_connection()
@@ -132,11 +236,11 @@ class LifeOSApp:
             estudos = cur.fetchall()
 
             cur.execute("""
-                SELECT rt.id, ef.nome as exercicio, st.repeticoes, st.carga_kg, st.calorias_gastas
+                SELECT rt.id, ef.nome as exercicio, st.id as serie_id, st.repeticoes, st.carga_kg, st.calorias_gastas
                 FROM registro_treino rt
                 JOIN serie_treino st ON rt.id = st.registro_treino_id
                 JOIN exercicio_fisico ef ON st.exercicio_id = ef.id
-                ORDER BY rt.id DESC;
+                ORDER BY rt.id DESC, st.id DESC;
             """)
             treinos = [
                 {
@@ -172,6 +276,32 @@ class LifeOSApp:
             """)
             habitos_diarios = cur.fetchall()
 
+            cur.execute("""
+                SELECT data_aporte, SUM(valor_investido) as aporte_diario
+                FROM investimento
+                WHERE usuario_id = 1
+                GROUP BY data_aporte
+                ORDER BY data_aporte ASC;
+            """)
+            dados_aportes = cur.fetchall()
+
+            grafico_investimentos = []
+            acumulado_aportes = 0.0
+
+            for ap in dados_aportes:
+                acumulado_aportes += float(ap["aporte_diario"])
+                grafico_investimentos.append(
+                    {
+                        "data": ap["data_aporte"].strftime("%d/%m"),
+                        "total_acumulado": acumulado_aportes,
+                    }
+                )
+
+            if not grafico_investimentos:
+                grafico_investimentos = [
+                    {"data": date.today().strftime("%d/%m"), "total_acumulado": 0.0}
+                ]
+
             cur.close()
             conn.close()
 
@@ -191,9 +321,7 @@ class LifeOSApp:
                     "taxa_habitos": len(
                         [h for h in habitos_diarios if h["concluido_hoje"]]
                     ),
-                    "grafico_investimentos": [
-                        {"data": "Hoje", "total_acumulado": patrimonio_total}
-                    ],
+                    "grafico_investimentos": grafico_investimentos,
                 },
                 "transactions": transactions,
                 "investments": investments,
@@ -208,13 +336,12 @@ class LifeOSApp:
             print(f"Erro no GetDashboardData: {e}")
             return {"error": str(e)}
 
-    # ================= CRUD FINANÇAS (Com barreira "abs()") =================
+    # ================= CRUD FINANÇAS =================
     def AddTransaction(self, tType, category, value):
         tipo_banco = "Entrada" if tType == "entrada" else "Saida"
         try:
             conn = self.get_connection()
             cur = conn.cursor()
-            # Uso de abs() previne totalmente a injeção de valores negativos no BD
             cur.execute(
                 "INSERT INTO transacao_financeira (conta_id, tipo, categoria, valor) VALUES (1, %s, %s, %s)",
                 (tipo_banco, category, abs(float(value))),
@@ -224,6 +351,21 @@ class LifeOSApp:
             conn.close()
         except:
             pass
+        return self.GetDashboardData()
+
+    def UpdateTransaction(self, tx_id, category, value):
+        try:
+            conn = self.get_connection()
+            cur = conn.cursor()
+            cur.execute(
+                "UPDATE transacao_financeira SET categoria = %s, valor = %s WHERE id = %s",
+                (category, abs(float(value)), tx_id),
+            )
+            conn.commit()
+            cur.close()
+            conn.close()
+        except Exception as e:
+            print(f"Erro ao atualizar transação: {e}")
         return self.GetDashboardData()
 
     def DeleteTransaction(self, tx_id):
@@ -302,6 +444,21 @@ class LifeOSApp:
             print(e)
             return {"error": str(e)}
 
+    def UpdateEstudo(self, estudo_id, topico, descricao, duracao):
+        try:
+            conn = self.get_connection()
+            cur = conn.cursor()
+            cur.execute(
+                "UPDATE sessao_estudo SET topico_estudado = %s, descricao_topico = %s, duracao_minutos = %s WHERE id = %s",
+                (topico, descricao, abs(int(duracao)), estudo_id),
+            )
+            conn.commit()
+            cur.close()
+            conn.close()
+        except Exception as e:
+            print(f"Erro ao atualizar estudo: {e}")
+        return self.GetDashboardData()
+
     def DeleteEstudo(self, id):
         try:
             conn = self.get_connection()
@@ -322,7 +479,6 @@ class LifeOSApp:
             realizando APENAS UMA SÉRIE de {abs(int(reps))} repetições do exercício '{exercicio_nome}' levantando {abs(float(carga))}kg de carga.
             Retorne APENAS um objeto JSON estrito com a chave "calorias" contendo o valor numérico (float).
             """
-
             resultado = self._parse_gemini_json(prompt)
             calorias_gastas = (
                 float(resultado["calorias"])
@@ -371,6 +527,21 @@ class LifeOSApp:
         except Exception as e:
             print(e)
             return {"error": str(e)}
+
+    def UpdateTreino(self, serie_id, reps, carga):
+        try:
+            conn = self.get_connection()
+            cur = conn.cursor()
+            cur.execute(
+                "UPDATE serie_treino SET repeticoes = %s, carga_kg = %s WHERE id = %s",
+                (abs(int(reps)), abs(float(carga)), serie_id),
+            )
+            conn.commit()
+            cur.close()
+            conn.close()
+        except Exception as e:
+            print(f"Erro ao atualizar treino: {e}")
+        return self.GetDashboardData()
 
     def DeleteTreino(self, id):
         try:
@@ -448,10 +619,7 @@ class LifeOSApp:
             conn = self.get_connection()
             cur = conn.cursor()
             cur.execute(
-                """
-                INSERT INTO alimento_suplemento (nome, porcao_gramas, calorias, proteina_g, carboidrato_g, gordura_g)
-                VALUES (%s, 100, %s, %s, %s, %s) RETURNING id;
-            """,
+                """INSERT INTO alimento_suplemento (nome, porcao_gramas, calorias, proteina_g, carboidrato_g, gordura_g) VALUES (%s, 100, %s, %s, %s, %s) RETURNING id;""",
                 (
                     alimento_nome.title(),
                     abs(int(macros["calorias"])),
@@ -486,6 +654,7 @@ class LifeOSApp:
             pass
         return self.GetDashboardData()
 
+    # ================= INTEGRAÇÕES EXTERNAS E API =================
     def FetchCDI(self):
         try:
             resp = requests.get(
@@ -539,6 +708,65 @@ class LifeOSApp:
             return {"response": resposta.text.strip()}
         except Exception as e:
             return {"error": f"Erro na IA: {str(e)}"}
+
+    # ================= CONSULTAS ANALÍTICAS NATIVAS =================
+    def GetAnalyticalQueries(self):
+        try:
+            conn = self.get_connection()
+            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+            cur.execute("""
+                SELECT cb.nome_banco AS entidade, SUM(tf.valor) AS valor_agregado
+                FROM transacao_financeira tf
+                JOIN conta_bancaria cb ON tf.conta_id = cb.id
+                JOIN usuario u ON cb.usuario_id = u.id
+                GROUP BY cb.nome_banco;
+            """)
+            q1 = [
+                {
+                    "entidade": row["entidade"],
+                    "valor_agregado": float(row["valor_agregado"] or 0),
+                }
+                for row in cur.fetchall()
+            ]
+
+            cur.execute("""
+                SELECT dp.nome AS entidade, SUM(se.duracao_minutos) AS valor_agregado
+                FROM sessao_estudo se
+                JOIN disciplina_projeto dp ON se.disciplina_id = dp.id
+                JOIN usuario u ON dp.usuario_id = u.id
+                GROUP BY dp.nome;
+            """)
+            q2 = [
+                {
+                    "entidade": row["entidade"],
+                    "valor_agregado": int(row["valor_agregado"] or 0),
+                }
+                for row in cur.fetchall()
+            ]
+
+            cur.execute("""
+                SELECT ef.grupo_muscular AS entidade, SUM(st.calorias_gastas) AS valor_agregado
+                FROM serie_treino st
+                JOIN exercicio_fisico ef ON st.exercicio_id = ef.id
+                JOIN registro_treino rt ON st.registro_treino_id = rt.id
+                GROUP BY ef.grupo_muscular;
+            """)
+            q3 = [
+                {
+                    "entidade": row["entidade"],
+                    "valor_agregado": float(row["valor_agregado"] or 0),
+                }
+                for row in cur.fetchall()
+            ]
+
+            cur.close()
+            conn.close()
+            return {"q1": q1, "q2": q2, "q3": q3}
+
+        except Exception as e:
+            print(f"Erro Analítico: {e}")
+            return {"error": str(e)}
 
 
 if __name__ == "__main__":
