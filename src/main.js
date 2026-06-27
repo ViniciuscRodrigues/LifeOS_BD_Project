@@ -3,6 +3,9 @@ const fmt = (val) =>
     val,
   );
 let investChartInstance = null;
+let chartQ1 = null,
+  chartQ2 = null,
+  chartQ3 = null;
 
 window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("treino-peso").value =
@@ -148,6 +151,16 @@ window.addTx = async () => {
   document.getElementById("tx-val").value = "";
 };
 
+window.editTx = async (id, currentCat, currentVal) => {
+  const cat = prompt("Nova Categoria:", currentCat);
+  const val = prompt("Novo Valor (R$):", currentVal);
+  if (cat && val && !isNaN(parseFloat(val))) {
+    renderAll(
+      await window.pywebview.api.UpdateTransaction(id, cat, parseFloat(val)),
+    );
+  }
+};
+
 window.deleteTx = async (id) => {
   if (confirm("Apagar transação?"))
     renderAll(await window.pywebview.api.DeleteTransaction(id));
@@ -240,6 +253,17 @@ window.addEstudoLivre = async () => {
   document.getElementById("estudo-duracao").value = "";
 };
 
+window.editEstudo = async (id, currentTopico, currentDesc, currentDur) => {
+  const topico = prompt("Novo Tópico:", currentTopico);
+  const desc = prompt("Nova Descrição:", currentDesc);
+  const dur = prompt("Nova Duração (minutos):", currentDur);
+  if (topico && dur && !isNaN(parseInt(dur))) {
+    renderAll(
+      await window.pywebview.api.UpdateEstudo(id, topico, desc, parseInt(dur)),
+    );
+  }
+};
+
 window.deleteEstudo = async (id) => {
   if (confirm("Apagar registo de estudo?"))
     renderAll(await window.pywebview.api.DeleteEstudo(id));
@@ -290,6 +314,20 @@ window.addTreinoIA = async () => {
   }
 };
 
+window.editTreino = async (id, currentReps, currentCarga) => {
+  const reps = prompt("Novas Repetições:", currentReps);
+  const carga = prompt("Nova Carga (Kg):", currentCarga);
+  if (reps && carga && !isNaN(parseInt(reps)) && !isNaN(parseFloat(carga))) {
+    renderAll(
+      await window.pywebview.api.UpdateTreino(
+        id,
+        parseInt(reps),
+        parseFloat(carga),
+      ),
+    );
+  }
+};
+
 window.deleteTreino = async (id) => {
   if (confirm("Apagar série do treino?"))
     renderAll(await window.pywebview.api.DeleteTreino(id));
@@ -311,6 +349,94 @@ window.deleteHabito = async (id) => {
     renderAll(await window.pywebview.api.DeleteHabito(id));
 };
 
+// ================= CONTROLES DE BANCO DE DADOS =================
+window.triggerResetDatabase = async () => {
+  if (
+    confirm(
+      "ATENÇÃO: Deseja eliminar todas as tabelas e recriar o banco com a carga padrão inicial?",
+    )
+  ) {
+    const res = await window.pywebview.api.ResetDatabase();
+    if (res.success) {
+      alert("Banco de dados reiniciado com sucesso!");
+      location.reload();
+    } else {
+      alert("Erro ao reiniciar: " + res.error);
+    }
+  }
+};
+
+window.triggerPopulateData = async () => {
+  if (
+    confirm(
+      "ATENÇÃO: Isso vai limpar o banco e gerar 30 dias de dados fictícios para a apresentação. Deseja continuar?",
+    )
+  ) {
+    const res = await window.pywebview.api.PopulateMockData();
+    if (res.success) {
+      alert(
+        "Dados históricos gerados com sucesso! Pressione OK para recarregar.",
+      );
+      location.reload();
+    } else {
+      alert("Erro ao popular banco de dados: " + res.error);
+    }
+  }
+};
+
+// ================= RENDERIZAÇÃO DE RELATÓRIOS =================
+async function loadAnalyticalReports() {
+  const data = await window.pywebview.api.GetAnalyticalQueries();
+  if (data.error) return;
+
+  document.getElementById("table-q1").innerHTML = data.q1
+    .map(
+      (r) =>
+        `<tr class="border-b border-slate-800"><td class="p-3 text-slate-300">${r.entidade}</td><td class="p-3 font-bold text-emerald-400">R$ ${r.valor_agregado.toFixed(2)}</td></tr>`,
+    )
+    .join("");
+  document.getElementById("table-q2").innerHTML = data.q2
+    .map(
+      (r) =>
+        `<tr class="border-b border-slate-800"><td class="p-3 text-slate-300">${r.entidade}</td><td class="p-3 font-bold text-indigo-400">${r.valor_agregado} min</td></tr>`,
+    )
+    .join("");
+  document.getElementById("table-q3").innerHTML = data.q3
+    .map(
+      (r) =>
+        `<tr class="border-b border-slate-800"><td class="p-3 text-slate-300">${r.entidade}</td><td class="p-3 font-bold text-orange-400">${r.valor_agregado.toFixed(1)} kcal</td></tr>`,
+    )
+    .join("");
+
+  const buildChart = (ctxId, instance, label, dataset) => {
+    const ctx = document.getElementById(ctxId).getContext("2d");
+    if (instance) instance.destroy();
+    return new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: dataset.map((d) => d.entidade),
+        datasets: [
+          {
+            label: label,
+            data: dataset.map((d) => d.valor_agregado),
+            backgroundColor: "#6366f1",
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+      },
+    });
+  };
+
+  chartQ1 = buildChart("chart-q1", chartQ1, "Movimentações (R$)", data.q1);
+  chartQ2 = buildChart("chart-q2", chartQ2, "Tempo (min)", data.q2);
+  chartQ3 = buildChart("chart-q3", chartQ3, "Energia (kcal)", data.q3);
+}
+
+// ================= RENDERIZAÇÃO GERAL DO DASHBOARD =================
 function renderAll(data) {
   if (data.error) {
     console.error(data.error);
@@ -366,10 +492,11 @@ function renderAll(data) {
   document.getElementById("ui-incomes").innerText = fmt(data.incomes);
   document.getElementById("ui-expenses").innerText = fmt(data.expenses);
 
+  // Injeção dos botões de Edição Mecânica (UPDATE) nos grids
   document.getElementById("tx-list").innerHTML = data.transactions
     .map(
       (tx) =>
-        `<li class="p-4 flex justify-between items-center hover:bg-slate-800/50 transition group"><span class="font-medium text-slate-200">${tx.categoria}</span><div class="flex items-center gap-4"><span class="font-bold ${tx.tipo === "Entrada" ? "text-emerald-400" : "text-rose-400"}">${tx.tipo === "Entrada" ? "+" : "-"} ${fmt(tx.valor)}</span><button onclick="deleteTx(${tx.id})" class="text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-trash"></i></button></div></li>`,
+        `<li class="p-4 flex justify-between items-center hover:bg-slate-800/50 transition group"><span class="font-medium text-slate-200">${tx.categoria}</span><div class="flex items-center gap-4"><span class="font-bold ${tx.tipo === "Entrada" ? "text-emerald-400" : "text-rose-400"}">${tx.tipo === "Entrada" ? "+" : "-"} ${fmt(tx.valor)}</span><button onclick="editTx(${tx.id}, '${tx.categoria}', ${tx.valor})" class="text-slate-400 hover:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deleteTx(${tx.id})" class="text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-trash"></i></button></div></li>`,
     )
     .join("");
 
@@ -390,14 +517,14 @@ function renderAll(data) {
   document.getElementById("estudos-list").innerHTML = data.history.estudos
     .map(
       (e) =>
-        `<li class="p-4 flex justify-between items-center hover:bg-slate-800/50 group"><div><p class="font-bold text-indigo-400">${e.disciplina}</p><p class="text-slate-200">${e.topico_estudado}</p><p class="text-xs text-slate-500 mt-1">${e.descricao_topico || ""}</p></div><div class="flex items-center gap-4"><span class="text-slate-400 font-bold bg-slate-900 px-3 py-1 rounded">${e.duracao_minutos} min</span><button onclick="deleteEstudo(${e.id})" class="text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-trash"></i></button></div></li>`,
+        `<li class="p-4 flex justify-between items-center hover:bg-slate-800/50 group"><div><p class="font-bold text-indigo-400">${e.disciplina}</p><p class="text-slate-200">${e.topico_estudado}</p><p class="text-xs text-slate-500 mt-1">${e.descricao_topico || ""}</p></div><div class="flex items-center gap-4"><span class="text-slate-400 font-bold bg-slate-900 px-3 py-1 rounded">${e.duracao_minutos} min</span><button onclick="editEstudo(${e.id}, '${e.topico_estudado}', '${e.descricao_topico || ""}', ${e.duracao_minutos})" class="text-slate-400 hover:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deleteEstudo(${e.id})" class="text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-trash"></i></button></div></li>`,
     )
     .join("");
 
   document.getElementById("treinos-list").innerHTML = data.history.treinos
     .map(
       (t) =>
-        `<li class="p-4 flex justify-between items-center hover:bg-slate-800/50 group"><div><span class="font-medium text-slate-200 text-lg">${t.exercicio}</span><p class="text-xs text-orange-400 font-semibold mt-1"><i class="fa-solid fa-fire mr-1"></i> Estimativa: ${t.calorias_gastas.toFixed(1)} kcal gastas</p></div><div class="flex items-center gap-4"><span class="text-slate-400 font-bold bg-slate-900 px-3 py-1 rounded">${t.repeticoes}x — ${t.carga_kg} Kg</span><button onclick="deleteTreino(${t.id})" class="text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-trash"></i></button></div></li>`,
+        `<li class="p-4 flex justify-between items-center hover:bg-slate-800/50 group"><div><span class="font-medium text-slate-200 text-lg">${t.exercicio}</span><p class="text-xs text-orange-400 font-semibold mt-1"><i class="fa-solid fa-fire mr-1"></i> Estimativa: ${t.calorias_gastas.toFixed(1)} kcal</p></div><div class="flex items-center gap-4"><span class="text-slate-400 font-bold bg-slate-900 px-3 py-1 rounded">${t.repeticoes}x — ${t.carga_kg} Kg</span><button onclick="editTreino(${t.serie_id}, ${t.repeticoes}, ${t.carga_kg})" class="text-slate-400 hover:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deleteTreino(${t.serie_id})" class="text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-trash"></i></button></div></li>`,
     )
     .join("");
 
@@ -408,4 +535,6 @@ function renderAll(data) {
           `<li class="p-4 flex justify-between items-center hover:bg-slate-800/50 group border-b border-slate-800/50 last:border-0"><div class="flex items-center gap-4"><input type="checkbox" ${h.concluido_hoje ? "checked" : ""} onchange="toggleHabito(${h.id}, this.checked)" class="w-6 h-6 accent-indigo-500 rounded bg-slate-900 border-slate-700 cursor-pointer" /><span class="font-medium text-lg ${h.concluido_hoje ? "text-slate-600 line-through" : "text-slate-200"} transition-all duration-300">${h.nome}</span></div><button onclick="deleteHabito(${h.id})" class="text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-trash"></i></button></li>`,
       )
       .join("");
+
+  loadAnalyticalReports();
 }
