@@ -54,7 +54,7 @@
                     >Total Control</span
                 >
             </h1>
-            <nav class="space-y-2">
+            <nav class="space-y-2 flex-1">
                 <button
                     onclick="switchTab('geral', this)"
                     class="nav-btn w-full text-left px-4 py-3 rounded-lg bg-indigo-600 text-white font-medium transition-colors"
@@ -97,11 +97,33 @@
                 >
                     <i class="fa-solid fa-circle-check mr-2"></i> Hábitos
                 </button>
+                <button
+                    onclick="switchTab('relatorios', this)"
+                    class="nav-btn w-full text-left px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 font-medium transition-colors"
+                >
+                    <i class="fa-solid fa-database mr-2"></i> Relatórios
+                </button>
             </nav>
+
+            <div class="pt-4 mt-4 border-t border-slate-800 space-y-2">
+                <button
+                    onclick="triggerResetDatabase()"
+                    class="w-full text-left px-4 py-2 rounded-lg text-xs font-bold bg-rose-950/40 text-rose-400 border border-rose-900/50 hover:bg-rose-900/30 transition"
+                >
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> Limpar
+                    Banco DDL
+                </button>
+                <button
+                    onclick="triggerPopulateData()"
+                    class="w-full text-left px-4 py-2 rounded-lg text-xs font-bold bg-emerald-950/40 text-emerald-400 border border-emerald-900/50 hover:bg-emerald-900/30 transition"
+                >
+                    <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Gerar
+                    Histórico
+                </button>
+            </div>
         </aside>
 
         <main class="flex-1 p-8 overflow-y-auto bg-slate-950">
-            <!-- ABA GERAL -->
             <section id="geral" class="tab-content active max-w-5xl mx-auto">
                 <div class="grid grid-cols-4 gap-4 mb-8">
                     <div
@@ -161,7 +183,7 @@
                     class="bg-slate-900 p-6 rounded-2xl border border-slate-800 mb-8 shadow-lg"
                 >
                     <h3 class="font-semibold text-slate-300 mb-4">
-                        Evolução de Aportes
+                        Evolução de Patrimonio
                     </h3>
                     <div class="w-full h-64">
                         <canvas id="investChart"></canvas>
@@ -180,7 +202,7 @@
                                 <i
                                     class="fa-solid fa-brain text-indigo-400"
                                 ></i>
-                                Consultor Gemini IA
+                                Consultor IA
                             </h3>
                             <p class="text-xs text-indigo-200/60 mt-1">
                                 Análise de métricas e sugestões práticas para
@@ -209,7 +231,6 @@
                 </div>
             </section>
 
-            <!-- FINANÇAS E INVESTIMENTOS -->
             <section id="extrato" class="tab-content max-w-5xl mx-auto">
                 <div class="grid grid-cols-3 gap-6 mb-8">
                     <div
@@ -415,7 +436,6 @@
                 </div>
             </section>
 
-            <!-- ABA: ESTUDOS -->
             <section id="estudos" class="tab-content max-w-5xl mx-auto">
                 <div
                     class="bg-slate-900 p-5 rounded-2xl border border-slate-800 mb-8 flex flex-col gap-4"
@@ -474,7 +494,6 @@
                 </div>
             </section>
 
-            <!-- ABA: TREINOS -->
             <section id="treinos" class="tab-content max-w-5xl mx-auto">
                 <div
                     class="bg-slate-900 p-5 rounded-2xl border border-slate-800 mb-8"
@@ -558,7 +577,6 @@
                 </div>
             </section>
 
-            <!-- ABA: DIETA -->
             <section id="dieta" class="tab-content max-w-5xl mx-auto">
                 <div
                     class="bg-indigo-900/30 p-4 rounded-2xl border border-indigo-500/30 mb-8 flex gap-4 relative overflow-hidden shadow-lg"
@@ -599,7 +617,6 @@
                 </div>
             </section>
 
-            <!-- ABA: HÁBITOS -->
             <section id="habitos" class="tab-content max-w-5xl mx-auto">
                 <div
                     class="bg-slate-900 p-4 rounded-2xl border border-slate-800 mb-8 flex gap-4"
@@ -634,6 +651,86 @@
                         id="habitos-list"
                         class="divide-y divide-slate-800/50"
                     ></ul>
+                </div>
+            </section>
+
+            <section id="relatorios" class="tab-content max-w-5xl mx-auto">
+                <h2 class="text-xl font-bold text-indigo-400 mb-6">
+                    Consultas Analíticas Multitabelas
+                </h2>
+
+                <div class="space-y-8">
+                    <div
+                        class="bg-slate-900 p-6 rounded-2xl border border-slate-800 grid grid-cols-2 gap-6 shadow-lg"
+                    >
+                        <div>
+                            <h4
+                                class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3"
+                            >
+                                Q1: Volume Financeiro Movimentado por Banco
+                            </h4>
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-slate-950 text-slate-400">
+                                    <tr>
+                                        <th class="p-3">Banco</th>
+                                        <th class="p-3">Total Acumulado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-q1"></tbody>
+                            </table>
+                        </div>
+                        <div class="h-48 relative">
+                            <canvas id="chart-q1"></canvas>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-slate-900 p-6 rounded-2xl border border-slate-800 grid grid-cols-2 gap-6 shadow-lg"
+                    >
+                        <div>
+                            <h4
+                                class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3"
+                            >
+                                Q2: Minutos Totais de Estudo por Disciplina
+                            </h4>
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-slate-950 text-slate-400">
+                                    <tr>
+                                        <th class="p-3">Disciplina</th>
+                                        <th class="p-3">Tempo Alocado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-q2"></tbody>
+                            </table>
+                        </div>
+                        <div class="h-48 relative">
+                            <canvas id="chart-q2"></canvas>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-slate-900 p-6 rounded-2xl border border-slate-800 grid grid-cols-2 gap-6 shadow-lg"
+                    >
+                        <div>
+                            <h4
+                                class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3"
+                            >
+                                Q3: Queima Calórica por Grupo Muscular
+                            </h4>
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-slate-950 text-slate-400">
+                                    <tr>
+                                        <th class="p-3">Grupo Muscular</th>
+                                        <th class="p-3">Gasto Estimado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-q3"></tbody>
+                            </table>
+                        </div>
+                        <div class="h-48 relative">
+                            <canvas id="chart-q3"></canvas>
+                        </div>
+                    </div>
                 </div>
             </section>
         </main>
